@@ -70,6 +70,18 @@ resource "digitalocean_firewall" "k8s" {
   }
 
   inbound_rule {
+    protocol    = "tcp"
+    port_range  = "6443"
+    source_tags = ["k8s-kubeadm-lab"]
+  }
+
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "6443"
+    source_addresses = [var.allowed_ssh_cidr]
+  }
+
+  inbound_rule {
     protocol         = "tcp"
     port_range       = "10250"
     source_addresses = [data.digitalocean_vpc.main.ip_range]

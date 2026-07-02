@@ -25,13 +25,37 @@ kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 helm upgrade --install argocd argo/argo-cd \
   --namespace argocd \
   --set global.nodeSelector."node-role"=control-plane \
+  --set global.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set global.tolerations[0].operator=Exists \
+  --set global.tolerations[0].effect=NoSchedule \
   --set controller.nodeSelector."node-role"=control-plane \
+  --set controller.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set controller.tolerations[0].operator=Exists \
+  --set controller.tolerations[0].effect=NoSchedule \
   --set server.nodeSelector."node-role"=control-plane \
+  --set server.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set server.tolerations[0].operator=Exists \
+  --set server.tolerations[0].effect=NoSchedule \
   --set repoServer.nodeSelector."node-role"=control-plane \
+  --set repoServer.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set repoServer.tolerations[0].operator=Exists \
+  --set repoServer.tolerations[0].effect=NoSchedule \
   --set applicationSet.nodeSelector."node-role"=control-plane \
+  --set applicationSet.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set applicationSet.tolerations[0].operator=Exists \
+  --set applicationSet.tolerations[0].effect=NoSchedule \
   --set redis.nodeSelector."node-role"=control-plane \
+  --set redis.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set redis.tolerations[0].operator=Exists \
+  --set redis.tolerations[0].effect=NoSchedule \
   --set dex.nodeSelector."node-role"=control-plane \
+  --set dex.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set dex.tolerations[0].operator=Exists \
+  --set dex.tolerations[0].effect=NoSchedule \
   --set notifications.nodeSelector."node-role"=control-plane \
+  --set notifications.tolerations[0].key=node-role.kubernetes.io/control-plane \
+  --set notifications.tolerations[0].operator=Exists \
+  --set notifications.tolerations[0].effect=NoSchedule \
   --set server.ingress.enabled=false \
   --set configs.params."server\.insecure"=true \
   --wait --timeout 10m

@@ -27,7 +27,7 @@ nodeRegistration:
 ---
 apiVersion: kubeadm.k8s.io/v1beta4
 kind: ClusterConfiguration
-kubernetesVersion: v${K8S_VERSION}.0
+kubernetesVersion: v${K8S_VERSION}.14
 controlPlaneEndpoint: ${CONTROL_PLANE_ENDPOINT}:6443
 networking:
   podSubnet: ${POD_CIDR}
@@ -48,30 +48,10 @@ fi
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 echo "==> Installing Calico CNI ${CALICO_VERSION}..."
-kubectl apply -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/tigera-operator.yaml"
-
-cat >/tmp/calico-custom-resources.yaml <<EOF
-apiVersion: operator.tigera.io/v1
-kind: Installation
-metadata:
-  name: default
-spec:
-  calicoNetwork:
-    ipPools:
-    - blockSize: 26
-      cidr: ${POD_CIDR}
-      encapsulation: VXLANCrossSubnet
-      natOutgoing: Enabled
-      nodeSelector: all()
----
-apiVersion: operator.tigera.io/v1
-kind: APIServer
-metadata:
-  name: default
-spec: {}
-EOF
-
-kubectl create -f /tmp/calico-custom-resources.yaml 2>/dev/null || kubectl apply -f /tmp/calico-custom-resources.yaml
+curl -fsSL "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml" -o /tmp/calico.yaml
+sed -i 's|# - name: CALICO_IPV4POOL_CIDR|- name: CALICO_IPV4POOL_CIDR|' /tmp/calico.yaml
+sed -i 's|#   value: "192.168.0.0/16"|  value: "'"${POD_CIDR}"'"|' /tmp/calico.yaml
+kubectl apply -f /tmp/calico.yaml
 
 echo "==> Waiting for control plane..."
 kubectl wait --for=condition=Ready node/k8s-lab-control-plane --timeout=300s 2>/dev/null || true

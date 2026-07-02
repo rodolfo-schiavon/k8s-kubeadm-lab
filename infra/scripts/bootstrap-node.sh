@@ -36,7 +36,9 @@ apt-get install -y -qq \
   jq \
   git \
   vim \
-  htop
+  htop \
+  conntrack \
+  ipset
 
 echo "==> [5/8] Install containerd..."
 install -m 0755 -d /etc/apt/keyrings

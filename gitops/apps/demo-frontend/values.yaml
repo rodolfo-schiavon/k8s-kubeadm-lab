@@ -4,7 +4,7 @@ fullnameOverride: demo-frontend
 image:
   repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-frontend
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Never
 
 replicaCount: 1
 

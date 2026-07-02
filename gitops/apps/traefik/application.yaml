@@ -19,6 +19,10 @@ spec:
           kind: DaemonSet
         nodeSelector:
           node-role: control-plane
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
         hostNetwork: true
         ports:
           web:

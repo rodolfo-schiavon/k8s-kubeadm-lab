@@ -75,8 +75,11 @@ ssh $SSH_OPTS "root@${CP_IP}" \
   | tee /tmp/kubeadm-cp-install.log
 
 JOIN_CMD=$(ssh $SSH_OPTS "root@${CP_IP}" "kubeadm token create --print-join-command 2>/dev/null | head -1")
+# Workers join via VPC private IP (firewall blocks 6443 on public/reserved IP)
+JOIN_CMD="${JOIN_CMD//${INGRESS_IP}/${CP_PRIVATE}}"
 if [[ -z "$JOIN_CMD" ]]; then
   JOIN_CMD=$(ssh $SSH_OPTS "root@${CP_IP}" "cat /tmp/kubeadm-join.sh 2>/dev/null | head -1")
+  JOIN_CMD="${JOIN_CMD//${INGRESS_IP}/${CP_PRIVATE}}"
 fi
 
 join_worker() {
