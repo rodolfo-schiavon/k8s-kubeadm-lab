@@ -11,10 +11,12 @@ spec:
   source:
     repoURL: https://charts.bitnami.com/bitnami
     chart: postgresql
-    targetRevision: "16.x.x"
+    targetRevision: "15.5.38"
     helm:
       releaseName: postgres
       valuesObject:
+        image:
+          tag: 16.4.0-debian-12-r14
         auth:
           postgresPassword: k8slab-postgres-change-me
           username: demo
