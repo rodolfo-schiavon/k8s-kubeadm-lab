@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 import os
+import threading
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,15 +33,30 @@ def init_db():
         conn.commit()
 
 
+_db_lock = threading.Lock()
+_db_ready = False
+
+
+def ensure_db():
+    global _db_ready
+    if _db_ready:
+        return
+    with _db_lock:
+        if _db_ready:
+            return
+        for _ in range(60):
+            try:
+                init_db()
+                _db_ready = True
+                return
+            except Exception:
+                import time
+                time.sleep(2)
+        raise RuntimeError("database not ready")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    for attempt in range(30):
-        try:
-            init_db()
-            break
-        except Exception:
-            import time
-            time.sleep(2)
     yield
 
 
@@ -66,7 +82,13 @@ class Item(BaseModel):
 
 @app.get("/healthz")
 def healthz():
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz():
     try:
+        ensure_db()
         with get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT 1")
@@ -77,6 +99,7 @@ def healthz():
 
 @app.get("/api/items", response_model=list[Item])
 def list_items():
+    ensure_db()
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT id, title FROM items ORDER BY id DESC LIMIT 50")
@@ -86,6 +109,7 @@ def list_items():
 
 @app.post("/api/items", response_model=Item)
 def create_item(payload: ItemCreate):
+    ensure_db()
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(

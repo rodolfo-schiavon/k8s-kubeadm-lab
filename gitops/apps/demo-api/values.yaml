@@ -40,7 +40,7 @@ probes:
   liveness:
     path: /healthz
   readiness:
-    path: /healthz
+    path: /readyz
 
 env:
   - name: DATABASE_URL

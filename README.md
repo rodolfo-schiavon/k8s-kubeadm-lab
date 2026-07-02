@@ -39,6 +39,24 @@ export KUBECONFIG="$(pwd)/kubeconfig"
 kubectl get nodes
 ```
 
+## Acesso rápido (sem DNS)
+
+Após o bootstrap, use o IP do worker-app com NodePort Traefik:
+
+```bash
+export W_APP=$(cd infra/terraform && terraform output -raw worker_app_public_ip)
+curl -H "Host: api.k8s-lab.zerotouch.tec.br" http://${W_APP}:30080/healthz
+```
+
+Ou port-forward local:
+
+```bash
+kubectl port-forward -n platform svc/demo-api 8080:80
+curl http://127.0.0.1:8080/healthz
+```
+
+**Ingress IP reservado:** `terraform output ingress_public_ip` — aponte DNS ou mova Traefik para o control-plane com PSS privileged.
+
 ## URLs (após DNS ou /etc/hosts)
 
 | Serviço | Host |

@@ -65,6 +65,18 @@ resource "digitalocean_firewall" "k8s" {
 
   inbound_rule {
     protocol         = "tcp"
+    port_range       = "30080"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "30443"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  inbound_rule {
+    protocol         = "tcp"
     port_range       = "6443"
     source_addresses = [data.digitalocean_vpc.main.ip_range]
   }
