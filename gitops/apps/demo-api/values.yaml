@@ -1,0 +1,60 @@
+nameOverride: demo-api
+fullnameOverride: demo-api
+
+image:
+  repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: api.k8s-lab.zerotouch.tec.br
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: demo-api-tls
+      hosts:
+        - api.k8s-lab.zerotouch.tec.br
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /healthz
+  readiness:
+    path: /healthz
+
+env:
+  - name: DATABASE_URL
+    value: postgresql://demo:k8slab-demo-change-me@postgres-postgresql.data-services.svc.cluster.local:5432/demodb
+
+nodeSelector:
+  node-role: worker-app
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1

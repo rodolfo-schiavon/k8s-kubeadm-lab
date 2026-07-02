@@ -1,0 +1,8 @@
+server:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: argocd.k8s-lab.zerotouch.tec.br
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    tls: true

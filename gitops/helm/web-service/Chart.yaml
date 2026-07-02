@@ -1,0 +1,6 @@
+apiVersion: v2
+name: web-service
+description: Generic web service chart for k8s-kubeadm-lab
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

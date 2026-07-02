@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-networkpolicy
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/apps/postgres
+    directory:
+      include: "networkpolicy.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: data-services
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

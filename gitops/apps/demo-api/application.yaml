@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+    platform.layer: app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/helm/web-service
+    helm:
+      releaseName: demo-api
+      valueFiles:
+        - ../../apps/demo-api/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: platform
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

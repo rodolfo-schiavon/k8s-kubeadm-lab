@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-dashboard
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+    platform.layer: foundation
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes.github.io/dashboard/
+    chart: kubernetes-dashboard
+    targetRevision: "7.x.x"
+    helm:
+      releaseName: kubernetes-dashboard
+      valuesObject:
+        app:
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - dashboard.k8s-lab.zerotouch.tec.br
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            tls:
+              enabled: true
+              secretName: dashboard-tls
+        nodeSelector:
+          node-role: control-plane
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubernetes-dashboard
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

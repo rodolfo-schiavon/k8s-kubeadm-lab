@@ -1,0 +1,57 @@
+nameOverride: demo-frontend
+fullnameOverride: demo-frontend
+
+image:
+  repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: app.k8s-lab.zerotouch.tec.br
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: demo-frontend-tls
+      hosts:
+        - app.k8s-lab.zerotouch.tec.br
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /healthz
+  readiness:
+    path: /healthz
+
+env:
+  - name: NEXT_PUBLIC_API_URL
+    value: https://api.k8s-lab.zerotouch.tec.br
+
+nodeSelector:
+  node-role: worker-app
+
+hpa:
+  enabled: false
+
+pdb:
+  enabled: true
+  minAvailable: 1

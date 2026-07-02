@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars — NEVER commit terraform.tfvars
+
+project_name     = "k8s-kubeadm-lab"
+environment      = "lab"
+region           = "nyc3"
+droplet_image    = "ubuntu-24-04-x64"
+droplet_size         = "s-2vcpu-4gb"
+control_plane_size   = "s-2vcpu-4gb"
+ssh_key_name     = "key-local-ocean-supbase"
+domain_name      = "k8s-lab.zerotouch.tec.br"
+assign_ingress_reserved_ip = true
+allowed_ssh_cidr = "SEU_IP/32"
+
+# export TF_VAR_do_token="your-do-token"

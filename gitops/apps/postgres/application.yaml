@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+    platform.layer: data
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: postgresql
+    targetRevision: "16.x.x"
+    helm:
+      releaseName: postgres
+      valuesObject:
+        auth:
+          postgresPassword: k8slab-postgres-change-me
+          username: demo
+          password: k8slab-demo-change-me
+          database: demodb
+        primary:
+          persistence:
+            enabled: true
+            size: 10Gi
+            storageClass: local-path
+          nodeSelector:
+            node-role: worker-data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: data-services
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

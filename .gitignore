@@ -1,0 +1,31 @@
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/tfplan
+infra/terraform/terraform.tfvars
+infra/terraform/.terraform.lock.hcl
+infra/bootstrap/spaces/.terraform/
+infra/bootstrap/spaces/terraform.tfvars
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+deploy-key*
+
+# Node modules / Python
+node_modules/
+__pycache__/
+.venv/
+dist/
+.next/
+
+# OS
+.DS_Store
+*.swp

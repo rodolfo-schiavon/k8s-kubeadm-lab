@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-lab-app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/apps
+    directory:
+      recurse: true
+      include: "{*/application.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-lab-namespaces
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/clusters/lab/namespaces
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-lab-cluster-issuer
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: k8s-kubeadm-lab
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/clusters/lab/cert-manager
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
