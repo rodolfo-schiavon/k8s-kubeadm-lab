@@ -44,7 +44,7 @@ probes:
 
 env:
   - name: DATABASE_URL
-    value: postgresql://demo:k8slab-demo-change-me@postgres-postgresql.data-services.svc.cluster.local:5432/demodb
+    value: postgresql://demo:k8slab-postgres-change-me@postgres-postgresql.data-services.svc.cluster.local:5432/demodb
 
 nodeSelector:
   node-role: worker-app
