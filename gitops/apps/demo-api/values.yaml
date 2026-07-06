@@ -3,7 +3,7 @@ fullnameOverride: demo-api
 
 image:
   repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-api
-  tag: 044230b0f6462270d551b748f5e7450969ee5ece
+  tag: 5855182c8014aaf5a11fc63ec10c8d93a0ecb443
   pullPolicy: IfNotPresent
 
 replicaCount: 1
