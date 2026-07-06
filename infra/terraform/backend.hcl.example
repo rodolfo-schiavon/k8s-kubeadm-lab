@@ -2,6 +2,7 @@
 # terraform init -backend-config=backend.hcl
 
 endpoint                    = "https://nyc3.digitaloceanspaces.com"
+endpoints                   = { s3 = "https://nyc3.digitaloceanspaces.com" }
 region                      = "us-east-1"
 bucket                      = "YOUR-SPACES-BUCKET"
 key                         = "k8s-kubeadm-lab/terraform.tfstate"
