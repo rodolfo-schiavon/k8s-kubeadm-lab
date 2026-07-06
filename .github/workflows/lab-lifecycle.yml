@@ -73,7 +73,7 @@ jobs:
     needs: validate
     if: ${{ inputs.action == 'provision' || inputs.action == 'recreate' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     environment: lab-production
     steps:
       - uses: actions/checkout@v4
@@ -101,9 +101,12 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y jq
+          sudo apt-get install -y jq python3-pip python3-venv
           kubectl version --client
           helm version
+
+      - name: Unit tests
+        run: ./scripts/run-unit-tests.sh
 
       - name: Run lifecycle
         run: ./scripts/lab-lifecycle.sh "${{ inputs.action }}"

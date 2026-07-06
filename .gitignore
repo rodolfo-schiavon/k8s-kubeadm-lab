@@ -22,7 +22,7 @@ kubeconfig
 *.key
 deploy-key*
 
-# Node modules / Python
+apps/api/.venv-test/
 node_modules/
 __pycache__/
 .venv/

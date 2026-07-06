@@ -48,12 +48,30 @@ fi
 
 wait_ssh() {
   local ip=$1
-  for i in $(seq 1 30); do
-    if ssh $SSH_OPTS "root@${ip}" "echo ok" &>/dev/null; then return 0; fi
+  local i
+  for i in $(seq 1 60); do
+    if ssh $SSH_OPTS "root@${ip}" "echo ok" &>/dev/null; then break; fi
     sleep 10
   done
-  echo "SSH timeout: $ip" >&2
-  return 1
+  if ! ssh $SSH_OPTS "root@${ip}" "echo ok" &>/dev/null; then
+    echo "SSH timeout: $ip" >&2
+    return 1
+  fi
+  echo "==> Waiting for cloud-init on $ip..."
+  ssh $SSH_OPTS "root@${ip}" bash -s <<'REMOTE'
+set -euo pipefail
+if command -v cloud-init >/dev/null 2>&1; then
+  cloud-init status --wait 2>/dev/null || true
+fi
+waited=0
+while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+  || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+  echo "apt lock held, waiting..."
+  sleep 5
+  waited=$((waited + 5))
+  if [[ "$waited" -ge 600 ]]; then exit 1; fi
+done
+REMOTE
 }
 
 bootstrap_node() {

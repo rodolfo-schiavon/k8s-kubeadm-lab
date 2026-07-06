@@ -5,6 +5,27 @@ set -euo pipefail
 
 K8S_VERSION="${K8S_VERSION:-1.31}"
 
+wait_for_apt() {
+  echo "==> Waiting for cloud-init and apt locks..."
+  if command -v cloud-init >/dev/null 2>&1; then
+    cloud-init status --wait 2>/dev/null || true
+  fi
+  local waited=0
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+    || fuser /var/lib/apt/lists/lock >/dev/null 2>&1 \
+    || fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
+    echo "    apt busy, waiting..."
+    sleep 5
+    waited=$((waited + 5))
+    if [[ "$waited" -ge 600 ]]; then
+      echo "ERROR: timeout waiting for apt lock" >&2
+      exit 1
+    fi
+  done
+}
+
+wait_for_apt
+
 echo "==> [1/8] Disable swap..."
 swapoff -a
 sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
@@ -42,7 +63,7 @@ apt-get install -y -qq \
 
 echo "==> [5/8] Install containerd..."
 install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
@@ -57,7 +78,7 @@ systemctl restart containerd
 systemctl enable containerd
 
 echo "==> [6/8] Install kubeadm, kubelet, kubectl v${K8S_VERSION}..."
-curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key" | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/Release.key" | gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${K8S_VERSION}/deb/ /" \
   >/etc/apt/sources.list.d/kubernetes.list
 apt-get update -qq

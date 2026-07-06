@@ -62,8 +62,11 @@ provision() {
   echo "=== Phase 4: Post-bootstrap ==="
   bash "${SCRIPT_DIR}/post-bootstrap.sh"
 
-  echo "=== Phase 5: Smoke tests ==="
-  bash "${SCRIPT_DIR}/smoke-test.sh"
+  echo "=== Phase 5: Unit tests ==="
+  bash "${SCRIPT_DIR}/run-unit-tests.sh"
+
+  echo "=== Phase 6: E2E tests ==="
+  bash "${SCRIPT_DIR}/e2e-test.sh"
 
   W_APP_IP="$(cd "$TF_DIR" && terraform output -raw worker_app_public_ip)"
   DOMAIN="${TF_VAR_domain_name:-k8s-lab.zerotouch.tec.br}"
