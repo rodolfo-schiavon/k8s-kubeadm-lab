@@ -4,7 +4,7 @@ fullnameOverride: demo-api
 image:
   repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-api
   tag: latest
-  pullPolicy: Never
+  pullPolicy: IfNotPresent
 
 replicaCount: 1
 
@@ -39,8 +39,14 @@ resources:
 probes:
   liveness:
     path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
   readiness:
     path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
 
 env:
   - name: DATABASE_URL
@@ -50,10 +56,7 @@ nodeSelector:
   node-role: worker-app
 
 hpa:
-  enabled: true
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 70
+  enabled: false
 
 pdb:
   enabled: true

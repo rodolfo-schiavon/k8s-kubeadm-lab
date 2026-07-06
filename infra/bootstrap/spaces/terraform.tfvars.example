@@ -1,0 +1,5 @@
+# Copy to terraform.tfvars — NEVER commit terraform.tfvars
+# export TF_VAR_do_token="your-do-token"
+
+bucket_name = "k8s-kubeadm-lab-tfstate"
+region      = "nyc3"

@@ -106,6 +106,12 @@ resource "digitalocean_firewall" "k8s" {
     source_addresses = [data.digitalocean_vpc.main.ip_range]
   }
 
+  # Calico IPIP (fallback if ippool uses ipipMode)
+  inbound_rule {
+    protocol         = "ipip"
+    source_addresses = [data.digitalocean_vpc.main.ip_range]
+  }
+
   # Calico BGP (optional)
   inbound_rule {
     protocol         = "tcp"

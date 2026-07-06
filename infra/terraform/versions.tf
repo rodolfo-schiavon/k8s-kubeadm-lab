@@ -1,6 +1,10 @@
 terraform {
   required_version = ">= 1.5.0"
 
+  backend "s3" {
+    # Configured via -backend-config (see backend.hcl.example and GHA workflows)
+  }
+
   required_providers {
     digitalocean = {
       source  = "digitalocean/digitalocean"

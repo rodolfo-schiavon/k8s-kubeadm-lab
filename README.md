@@ -10,7 +10,19 @@ Laboratório Kubernetes **production-grade** na DigitalOcean usando **kubeadm**,
 | `k8s-lab-worker-app` | Frontend + Backend |
 | `k8s-lab-worker-data` | PostgreSQL |
 
-**Custo estimado:** ~$72/mês (3× `s-2vcpu-4gb`) + ~$4/mês Reserved IP.
+**Custo estimado:** ~$72/mês (3× `s-2vcpu-4gb`) quando ligado. **$0** após `destroy` via GitHub Actions.
+
+## Lab Lifecycle (destroy / recreate)
+
+Para economizar, use **Actions → Lab Lifecycle** (`destroy` | `provision` | `recreate`).
+
+Ver [docs/runbook.md](docs/runbook.md) para secrets e DNS manual.
+
+```bash
+# Local
+./scripts/lab-lifecycle.sh destroy    # custo zero
+./scripts/lab-lifecycle.sh provision  # cluster completo
+```
 
 ## Referências oficiais Kubernetes
 
@@ -75,6 +87,8 @@ Aponte `*.k8s-lab.zerotouch.tec.br` para o `ingress_public_ip` do Terraform outp
 
 ## Destruir ambiente
 
+Via GitHub Actions: **Lab Lifecycle → destroy** (ver [docs/runbook.md](docs/runbook.md)).
+
 ```bash
-cd infra/terraform && terraform destroy
+./scripts/lab-lifecycle.sh destroy
 ```

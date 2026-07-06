@@ -7,10 +7,13 @@ infra/terraform/terraform.tfvars
 infra/terraform/.terraform.lock.hcl
 infra/bootstrap/spaces/.terraform/
 infra/bootstrap/spaces/terraform.tfvars
+infra/bootstrap/spaces/terraform.tfstate
+infra/bootstrap/spaces/terraform.tfstate.*
 
 # Kubernetes
 kubeconfig
 *.kubeconfig
+.lab-outputs.json
 
 # Secrets
 .env

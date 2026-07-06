@@ -53,6 +53,10 @@ sed -i 's|# - name: CALICO_IPV4POOL_CIDR|- name: CALICO_IPV4POOL_CIDR|' /tmp/cal
 sed -i 's|#   value: "192.168.0.0/16"|  value: "'"${POD_CIDR}"'"|' /tmp/calico.yaml
 kubectl apply -f /tmp/calico.yaml
 
+echo "==> Calico: VXLAN mode (DO firewall allows UDP 4789, not IPIP)..."
+kubectl wait --for=condition=Established crd/ippools.crd.projectcalico.org --timeout=120s
+kubectl patch ippool default-ipv4-ippool --type merge -p '{"spec":{"ipipMode":"Never","vxlanMode":"Always"}}' || true
+
 echo "==> Waiting for control plane..."
 kubectl wait --for=condition=Ready node/k8s-lab-control-plane --timeout=300s 2>/dev/null || true
 kubectl get nodes -o wide

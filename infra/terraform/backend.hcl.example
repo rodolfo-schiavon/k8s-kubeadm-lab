@@ -1,0 +1,14 @@
+# Copy to backend.hcl and fill values — NEVER commit backend.hcl
+# terraform init -backend-config=backend.hcl
+
+endpoint                    = "https://nyc3.digitaloceanspaces.com"
+region                      = "us-east-1"
+bucket                      = "YOUR-SPACES-BUCKET"
+key                         = "k8s-kubeadm-lab/terraform.tfstate"
+access_key                  = "YOUR_SPACES_ACCESS_KEY"
+secret_key                  = "YOUR_SPACES_SECRET_KEY"
+skip_credentials_validation = true
+skip_metadata_api_check     = true
+skip_region_validation      = true
+skip_requesting_account_id  = true
+skip_s3_checksum            = true

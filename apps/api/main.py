@@ -15,7 +15,17 @@ DATABASE_URL = os.getenv(
 
 
 def get_conn():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, connect_timeout=5)
+
+
+def ping_db() -> bool:
+    try:
+        with psycopg2.connect(DATABASE_URL, connect_timeout=3) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+        return True
+    except Exception:
+        return False
 
 
 def init_db():
@@ -87,14 +97,9 @@ def healthz():
 
 @app.get("/readyz")
 def readyz():
-    try:
-        ensure_db()
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1")
-        return {"status": "ok", "database": "connected"}
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if not ping_db():
+        raise HTTPException(status_code=503, detail="database unreachable")
+    return {"status": "ok", "database": "connected"}
 
 
 @app.get("/api/items", response_model=list[Item])

@@ -9,33 +9,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://charts.bitnami.com/bitnami
-    chart: postgresql
-    targetRevision: "15.5.38"
-    helm:
-      releaseName: postgres
-      valuesObject:
-        image:
-          tag: 16.4.0-debian-12-r14
-        auth:
-          postgresPassword: k8slab-postgres-change-me
-          username: demo
-          password: k8slab-demo-change-me
-          database: demodb
-        primary:
-          persistence:
-            enabled: true
-            size: 10Gi
-            storageClass: local-path
-          nodeSelector:
-            node-role: worker-data
-          resources:
-            requests:
-              cpu: 250m
-              memory: 512Mi
-            limits:
-              cpu: 1000m
-              memory: 1Gi
+    repoURL: https://github.com/rodolfo-schiavon/k8s-kubeadm-lab.git
+    targetRevision: main
+    path: gitops/apps/postgres
+    directory:
+      include: "{manifest.yaml,networkpolicy.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: data-services

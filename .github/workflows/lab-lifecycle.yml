@@ -1,0 +1,152 @@
+name: Lab Lifecycle
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action to perform"
+        required: true
+        type: choice
+        options:
+          - destroy
+          - provision
+          - recreate
+      confirm:
+        description: "Type DESTROY to confirm destroy or recreate"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  group: lab-lifecycle
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+  TF_VAR_ssh_key_name: ${{ vars.TF_SSH_KEY_NAME || 'key-local-ocean-supbase' }}
+  TF_VAR_allowed_ssh_cidr: "0.0.0.0/0"
+  TF_VAR_assign_ingress_reserved_ip: "false"
+  TF_VAR_domain_name: ${{ vars.LAB_DOMAIN_NAME || 'k8s-lab.zerotouch.tec.br' }}
+  TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
+  TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
+  TF_BACKEND_ACCESS_KEY: ${{ secrets.TF_BACKEND_ACCESS_KEY }}
+  TF_BACKEND_SECRET_KEY: ${{ secrets.TF_BACKEND_SECRET_KEY }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GHCR_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require DESTROY confirmation
+        if: ${{ inputs.action == 'destroy' || inputs.action == 'recreate' }}
+        run: |
+          if [[ "${{ inputs.confirm }}" != "DESTROY" ]]; then
+            echo "For destroy/recreate, set confirm=DESTROY"
+            exit 1
+          fi
+
+  destroy:
+    needs: validate
+    if: ${{ inputs.action == 'destroy' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: lab-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+      - name: Terraform destroy
+        run: ./scripts/lab-lifecycle.sh destroy
+      - name: Summary
+        run: |
+          echo "## Lab destroyed" >> "$GITHUB_STEP_SUMMARY"
+          echo "All droplets and reserved IPs removed. Monthly cost: **\$0**." >> "$GITHUB_STEP_SUMMARY"
+
+  lifecycle:
+    needs: validate
+    if: ${{ inputs.action == 'provision' || inputs.action == 'recreate' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: lab-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_TOKEN }}
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install tools
+        run: |
+          curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update -qq
+          sudo apt-get install -y kubectl jq
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Run lifecycle
+        run: ./scripts/lab-lifecycle.sh "${{ inputs.action }}"
+
+      - name: Collect credentials
+        id: creds
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+        run: |
+          ARGO_PW="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' 2>/dev/null | base64 -d || echo 'N/A')"
+          echo "argo_password=${ARGO_PW}" >> "$GITHUB_OUTPUT"
+          kubectl create sa dashboard-admin -n kubernetes-dashboard --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
+          kubectl create clusterrolebinding dashboard-admin \
+            --clusterrole=cluster-admin \
+            --serviceaccount=kubernetes-dashboard:dashboard-admin \
+            --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
+          DASH_TOKEN="$(kubectl -n kubernetes-dashboard create token dashboard-admin 2>/dev/null || echo 'N/A')"
+          echo "dashboard_token<<EOF" >> "$GITHUB_OUTPUT"
+          echo "${DASH_TOKEN}" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig
+        run: |
+          W_APP_IP="$(cd infra/terraform && terraform output -raw worker_app_public_ip)"
+          DOMAIN="${TF_VAR_domain_name}"
+          {
+            echo "## Lab provisioned"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| worker_app_public_ip | \`${W_APP_IP}\` |"
+            echo "| Argo CD user | \`admin\` |"
+            echo "| Argo CD password | \`${{ steps.creds.outputs.argo_password }}\` |"
+            echo ""
+            echo "### DNS manual (A records → \`${W_APP_IP}\`)"
+            echo "- \`app.${DOMAIN}\`"
+            echo "- \`api.${DOMAIN}\`"
+            echo "- \`argocd.${DOMAIN}\`"
+            echo "- \`dashboard.${DOMAIN}\`"
+            echo ""
+            echo "### URLs (after DNS)"
+            echo "- http://app.${DOMAIN}"
+            echo "- http://api.${DOMAIN}/healthz"
+            echo "- http://argocd.${DOMAIN}"
+            echo "- http://dashboard.${DOMAIN}"
+            echo ""
+            echo "### Dashboard token"
+            echo '```'
+            echo "${{ steps.creds.outputs.dashboard_token }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

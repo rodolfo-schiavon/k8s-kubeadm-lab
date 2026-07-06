@@ -4,8 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 
 type Item = { id: number; title: string };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [title, setTitle] = useState("");
@@ -13,7 +11,7 @@ export default function Home() {
 
   async function loadItems() {
     try {
-      const res = await fetch(`${API_URL}/api/items`);
+      const res = await fetch("/api/items");
       if (!res.ok) throw new Error(await res.text());
       setItems(await res.json());
       setError("");
@@ -29,7 +27,7 @@ export default function Home() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    const res = await fetch(`${API_URL}/api/items`, {
+    const res = await fetch("/api/items", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title }),

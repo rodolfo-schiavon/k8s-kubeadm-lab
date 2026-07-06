@@ -16,19 +16,30 @@ spec:
       releaseName: traefik
       valuesObject:
         deployment:
-          kind: Deployment
-          replicas: 1
+          kind: DaemonSet
+        updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 1
+            maxSurge: 0
         nodeSelector:
           node-role: worker-app
-        service:
-          type: NodePort
+        hostNetwork: true
+        podSecurityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        securityContext:
+          allowPrivilegeEscalation: true
+          readOnlyRootFilesystem: false
+          capabilities:
+            add:
+              - NET_BIND_SERVICE
         ports:
           web:
             port: 80
-            nodePort: 30080
+            hostPort: 80
           websecure:
             port: 443
-            nodePort: 30443
+            hostPort: 443
         ingressClass:
           enabled: true
           isDefaultClass: true

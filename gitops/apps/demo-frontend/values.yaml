@@ -4,7 +4,7 @@ fullnameOverride: demo-frontend
 image:
   repository: ghcr.io/rodolfo-schiavon/k8s-lab-demo-frontend
   tag: latest
-  pullPolicy: Never
+  pullPolicy: IfNotPresent
 
 replicaCount: 1
 
@@ -43,8 +43,8 @@ probes:
     path: /healthz
 
 env:
-  - name: NEXT_PUBLIC_API_URL
-    value: https://api.k8s-lab.zerotouch.tec.br
+  - name: API_URL
+    value: http://demo-api.platform.svc.cluster.local
 
 nodeSelector:
   node-role: worker-app
