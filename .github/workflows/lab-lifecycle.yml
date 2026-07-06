@@ -11,6 +11,7 @@ on:
           - destroy
           - provision
           - recreate
+          - validate
       confirm:
         description: "Type DESTROY to confirm destroy or recreate"
         required: false
@@ -71,7 +72,7 @@ jobs:
 
   lifecycle:
     needs: validate
-    if: ${{ inputs.action == 'provision' || inputs.action == 'recreate' }}
+    if: ${{ inputs.action == 'provision' || inputs.action == 'recreate' || inputs.action == 'validate' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     environment: lab-production

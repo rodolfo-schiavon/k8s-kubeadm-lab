@@ -18,15 +18,20 @@ echo "Smoke tests via ${W_APP_IP} (Traefik hostNetwork :80)"
 
 check_http() {
   local name="$1" host="$2" path="$3" expect="$4"
-  local code body
-  code="$(curl -s -o /tmp/smoke-body.txt -w "%{http_code}" --max-time 20 \
-    -H "Host: ${host}" "http://${W_APP_IP}${path}")"
-  body="$(head -c 200 /tmp/smoke-body.txt)"
-  if [[ "$code" != "$expect" ]]; then
-    echo "FAIL ${name}: HTTP ${code} (expected ${expect}) body=${body}" >&2
-    return 1
-  fi
-  echo "OK   ${name}: HTTP ${code}"
+  local code body attempt
+  for attempt in 1 2 3 4 5; do
+    code="$(curl -s -o /tmp/smoke-body.txt -w "%{http_code}" --max-time 20 \
+      -H "Host: ${host}" "http://${W_APP_IP}${path}")"
+    body="$(head -c 200 /tmp/smoke-body.txt)"
+    if [[ "$code" == "$expect" ]]; then
+      echo "OK   ${name}: HTTP ${code}"
+      return 0
+    fi
+    echo "retry ${name} attempt ${attempt}: HTTP ${code} body=${body}"
+    sleep 15
+  done
+  echo "FAIL ${name}: HTTP ${code} (expected ${expect}) body=${body}" >&2
+  return 1
 }
 
 fail=0
